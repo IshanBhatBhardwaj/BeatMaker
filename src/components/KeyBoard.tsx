@@ -1,47 +1,64 @@
+import { playHowlSound } from "@/app/utils/howlUtils/HowlUtils";
 import { useSoundMapContext } from "@/contexts/mapContext";
+import { isHowl } from "@/app/utils/howlUtils/HowlUtils";
+import { isSpriteHowl } from "@/app/utils/howlUtils/HowlUtils";
+import { useState, useEffect } from "react";
+
+interface Beat {
+    key: string,
+    timeStamp: number
+}
 
 const KeyBoard = () => {
     const soundMap = useSoundMapContext();
+    const [beats, setBeat] = useState<Beat[]>([])
 
-    const isHowl = (item : Howl | string): item is Howl => {
-        return (item as Howl).play() !== undefined;
-    }
+    useEffect(() => {
+        window.addEventListener("keydown", handleKeyPress);
+    }, [])
+    
 
-    const isSpriteHowl = (item : Howl | string, name: string): item is Howl => {
-        return (item as Howl).play(name) !== undefined;
+    const timeout = (ms: number) => {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     const handleKeyPress = (e: KeyboardEvent) => {
+        console.log("called")
         const keyPressed = e.key;
-        const value = soundMap.soundMap.get(keyPressed);
 
-        if ( value === undefined) {return};
+        const soundMapValue = soundMap.soundMap.get(keyPressed);
+        const currentTime = Date.now();
+        setBeat((prevBeat) => [...prevBeat, {key: keyPressed, timeStamp: currentTime}]);
+       
+        if (soundMapValue === undefined) {return};
 
-        let howl = value[0];
-        if (value.length > 1) {
-            let name = value[1];
-
-            if (typeof name === "string" && isSpriteHowl(howl, name)) {
-                if (howl.playing()) {
-                    howl.pause();
-                }
-                howl.play(name);
-            }
-        }
-        else {
-            if (isHowl(howl)) {
-                if (howl.playing()) {
-                    howl.pause();
-                }
-                howl.play();
-            }
-        }
+        playHowlSound(soundMapValue);
    }
 
-    window.addEventListener("keydown", handleKeyPress);
+
+    const playLoop = async () => {
+       if (beats.length === 0) return;
+   
+       let prevTime = beats[0].timeStamp;
+        for (const beat of beats) {
+         const delay = beat.timeStamp - prevTime;
+         prevTime = beat.timeStamp;
+
+         await timeout(delay);
+         console.log(delay)
+
+         const value = soundMap.soundMap.get(beat.key);
+
+         if (value === undefined) {return};
+
+         playHowlSound(value);
+       };
+     };
+  
 
     return (
         <div>  
+            <button onClick={playLoop}>NO WAY NO WAY</button>
         </div>
     )
 }

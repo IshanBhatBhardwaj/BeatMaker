@@ -1,5 +1,6 @@
 import {useState} from "react"
 import { useSoundMapContext } from "@/contexts/mapContext"
+import { playHowlSound } from "@/app/utils/howlUtils/HowlUtils"
 interface Beat {
     key: string,
     timeStamp: number
@@ -25,11 +26,11 @@ const Looper = () => {
       const delay = beat.timeStamp - (Date.now() - currentTime);
       setTimeout(() => {
         const value = soundMap.soundMap.get(beat.key);
+
         if (value === undefined) {return};
-        let howl = value[0];
-        let name = value[1];
 
-
+        playHowlSound(value);
+     
       }, delay);
     });
   };
@@ -39,6 +40,7 @@ const Looper = () => {
 
     return (
         <div>  
+          <button onClick={playLoop}>No way this works</button>
         </div>
     )
 }
